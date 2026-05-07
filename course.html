@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Sabula-Sabuli - Kursus</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    @font-face {
+      font-family: 'LontarakNeo';
+      src: url('font/LontarakNeo-Regular.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f5f5f5; color: #333; min-height: 100vh; }
+
+    .navbar {
+      background: linear-gradient(135deg, #1b5e20, #2e7d32);
+      padding: 10px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 3px solid #4caf50;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .form-group input[readonly], .form-group input:read-only {
+      background: #e8f5e9;
+      cursor: not-allowed;
+      color: #2e7d32;
+    }
+    .nav-brand { display: flex; align-items: center; gap: 10px; }
+    .nav-logo { width: 40px; height: 40px; object-fit: cover; }
+    .nav-title { font-family: 'Cinzel', serif; font-size: 1.2rem; font-weight: 600; color: #fff; letter-spacing: 2px; }
+    .nav-subtitle { font-size: 0.7rem; color: #c8e6c9; letter-spacing: 1px; }
+    .nav-links { display: flex; gap: 8px; }
+    .nav-links a {
+      color: #e8f5e9;
+      text-decoration: none;
+      padding: 8px 15px;
+      border-radius: 8px;
+      transition: all 0.3s;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .nav-links a:hover { background: rgba(76, 175, 80, 0.3); }
+    .nav-links a.active { background: #4caf50; color: #fff; }
+
+    .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+    .page-title { font-family: 'Cinzel', serif; font-size: 1.8rem; color: #2e7d32; margin-bottom: 20px; }
+
+    .card { background: #fff; border-radius: 15px; padding: 25px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: 1px solid #e0e0e0; }
+    .card h2, .card h3 { color: #2e7d32; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #e0e0e0; font-family: 'Cinzel', serif; }
+    .card h3 { font-size: 1.1rem; margin-top: 20px; border: none; padding-bottom: 0; }
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; margin-bottom: 5px; color: #555; font-size: 0.9rem; font-weight: 500; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px 15px; background: #fff; border: 1px solid #c8e6c9; border-radius: 8px; color: #333; font-size: 1rem; transition: border-color 0.3s; }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #4caf50; box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+
+    .image-preview { width: 100%; height: 300px; border-radius: 8px; display: none; border: none; }
+    .image-preview.show { display: block; }
+
+    .lesson-section { background: #e8f5e9; border-radius: 10px; padding: 20px; margin-top: 20px; }
+    .lesson-list { margin-top: 15px; }
+    .lesson-item { background: #fff; border-radius: 10px; padding: 15px; margin-bottom: 15px; border-left: 4px solid #4caf50; position: relative; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+    .lesson-item.video { border-left-color: #e53935; }
+    .lesson-item.book { border-left-color: #1e88e5; }
+    .lesson-item.quiz { border-left-color: #43a047; }
+    .lesson-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .lesson-header h4 { color: #333; font-size: 1rem; }
+    .lesson-type-badge { padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; color: #fff; }
+    .lesson-type-badge.video { background: #e53935; }
+    .lesson-type-badge.book { background: #1e88e5; }
+    .lesson-type-badge.quiz { background: #43a047; }
+    .lesson-fields { display: none; }
+    .lesson-item.expanded .lesson-fields { display: block; }
+    .lesson-actions { display: flex; gap: 8px; }
+
+    .question-item { background: #f5f5f5; border-radius: 8px; padding: 15px; margin-bottom: 10px; border: 1px solid #c8e6c9; }
+    .question-item label { color: #2e7d32; font-size: 0.85rem; display: block; margin-bottom: 8px; font-weight: 500; }
+    .options-list { display: flex; flex-direction: column; gap: 8px; }
+    .option-row { display: flex; align-items: center; gap: 10px; }
+    .option-row input[type="radio"] { width: auto; accent-color: #4caf50; }
+    .option-row input[type="text"] { flex: 1; }
+
+    .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 0.9rem; transition: all 0.3s; font-family: 'Cinzel', serif; }
+    .btn-primary { background: #4caf50; color: #fff; }
+    .btn-primary:hover { background: #388e3c; }
+    .btn-secondary { background: #e8f5e9; color: #2e7d32; }
+    .btn-secondary:hover { background: #c8e6c9; }
+    .btn-small { padding: 6px 12px; font-size: 0.8rem; }
+    .btn-danger { background: #e53935; color: #fff; }
+    .btn-danger:hover { background: #c62828; }
+    .btn-group { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+
+    .toast { position: fixed; bottom: 20px; right: 20px; background: #4caf50; color: #fff; padding: 15px 25px; border-radius: 8px; display: none; animation: slideIn 0.3s; z-index: 1000; }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    .youtube-hint { font-size: 0.8rem; color: #666; margin-top: 5px; }
+
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
+    .modal-overlay.show { display: flex; }
+    .modal { background: #fff; border-radius: 15px; padding: 25px; max-width: 400px; width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+    .modal h3 { color: #2e7d32; margin-bottom: 20px; font-family: 'Cinzel', serif; }
+    .modal-options { display: flex; flex-direction: column; gap: 10px; }
+    .modal-option { background: #f5f5f5; padding: 15px; border-radius: 8px; cursor: pointer; text-align: center; transition: all 0.3s; border: 2px solid transparent; }
+    .modal-option:hover { border-color: #4caf50; background: #e8f5e9; }
+    .modal-option .icon { font-size: 2rem; margin-bottom: 10px; }
+    .modal-option .label { font-size: 1rem; color: #333; }
+
+    @media (max-width: 768px) {
+      .navbar { flex-direction: column; gap: 15px; padding: 15px 20px; }
+      .nav-links { flex-wrap: wrap; justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-brand">
+      <img src="logo.png" alt="Logo" class="nav-logo">
+      <div>
+        <div class="nav-title">Sabula-Sabuli</div>
+        <div class="nav-subtitle">Admin Panel</div>
+      </div>
+    </div>
+    <div class="nav-links">
+      <a href="index.html">Beranda</a>
+      <a href="articles.html">📰 Artikel</a>
+      <a href="book.html">📚 Buku</a>
+      <a href="course.html" class="active">🎓 Kursus</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h1 class="page-title">🎓 Editor Kursus</h1>
+
+    <div class="card">
+      <h2>Form Kursus Baru</h2>
+      <form id="kursusForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label>ID Kursus</label>
+            <input type="text" id="courseId" readonly>
+          </div>
+          <div class="form-group">
+            <label>Order (nomor urut)</label>
+            <input type="number" id="order" value="1" min="1">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Judul</label>
+            <input type="text" id="title" placeholder="Judul Kursus" required oninput="autoGenerateCourseId()">
+          </div>
+          <div class="form-group">
+            <label>Estimasi Waktu (menit)</label>
+            <input type="number" id="estimatedMinutes" value="60" min="1">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Subtitle / Deskripsi</label>
+          <input type="text" id="subtitle" placeholder="Deskripsi singkat kursus">
+        </div>
+
+        <div class="form-group">
+          <label>Sampul (Google Drive)</label>
+          <input type="text" id="imageUrl" placeholder="https://drive.google.com/..." oninput="previewImage(this)">
+          <iframe id="imagePreview" class="image-preview"></iframe>
+        </div>
+
+        <div class="form-group">
+          <label>Difficulty / Tingkat Kesulitan</label>
+          <select id="difficulty">
+            <option value="beginner">Lomo-lomoji / Pemula</option>
+            <option value="medium" selected>Tangnga / Sedang</option>
+            <option value="advanced">Okalaki / Lanjutan</option>
+          </select>
+        </div>
+
+        <div class="lesson-section">
+          <h3>Pelajaran</h3>
+          <div class="lesson-list" id="lessonList"></div>
+          <button type="button" class="btn btn-secondary" onclick="showLessonModal()">+ Tambah Pelajaran</button>
+        </div>
+
+        <div class="btn-group" style="margin-top: 25px;">
+          <button type="button" class="btn btn-primary" onclick="downloadJSON()">Download JSON</button>
+          <button type="button" class="btn btn-secondary" onclick="clearForm()">Clear Form</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="lessonModal">
+    <div class="modal">
+      <h3>Pilih Tipe Pelajaran</h3>
+      <div class="modal-options">
+        <div class="modal-option" onclick="addLesson('video')">
+          <div class="icon">&#127909;</div>
+          <div class="label">Video</div>
+        </div>
+        <div class="modal-option" onclick="addLesson('book')">
+          <div class="icon">&#128218;</div>
+          <div class="label">Buku / PDF</div>
+        </div>
+        <div class="modal-option" onclick="addLesson('quiz')">
+          <div class="icon">&#10004;</div>
+          <div class="label">Kuis</div>
+        </div>
+      </div>
+      <button type="button" class="btn btn-secondary" style="width: 100%; margin-top: 15px;" onclick="hideLessonModal()">Batal</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Berhasil!</div>
+
+  <script>
+    function extractDriveId(url) {
+      if (!url) return null;
+      var match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+      if (match) return match[1];
+      match = url.match(/open\?id=([a-zA-Z0-9_-]+)/);
+      if (match) return match[1];
+      match = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+      if (match) return match[1];
+      return null;
+    }
+
+    function previewImage(input) {
+      var preview = document.getElementById('imagePreview');
+      if (input.value && input.value.trim()) {
+        var fileId = extractDriveId(input.value);
+        if (fileId) {
+          preview.src = 'https://drive.google.com/file/d/' + fileId + '/preview';
+          preview.classList.add('show');
+        } else {
+          preview.classList.remove('show');
+          preview.src = '';
+        }
+      } else {
+        preview.classList.remove('show');
+        preview.src = '';
+      }
+    }
+
+    function generateCourseId() {
+      var timestamp = Date.now().toString(36);
+      var random = Math.random().toString(36).substr(2, 5);
+      return 'kursus-' + timestamp + '-' + random;
+    }
+
+    function autoGenerateCourseId() {
+      var title = document.getElementById('title').value.trim();
+      if (!title) {
+        document.getElementById('courseId').value = generateCourseId();
+        return;
+      }
+      var id = title.toLowerCase()
+        .replace(/[^a-z0-9\s]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .substr(0, 50);
+      document.getElementById('courseId').value = id || generateCourseId();
+    }
+
+    var lessonCounter = 0;
+    var lessons = [];
+
+    function showLessonModal() {
+      document.getElementById('lessonModal').classList.add('show');
+    }
+
+    function hideLessonModal() {
+      document.getElementById('lessonModal').classList.remove('show');
+    }
+
+    function addLesson(type) {
+      hideLessonModal();
+      lessonCounter++;
+      var lessonId = 'lesson-' + lessonCounter;
+      var order = lessons.length;
+      var typeLabels = { video: 'Video', book: 'Buku', quiz: 'Kuis' };
+
+      lessons.push({ id: lessonId, type: type });
+
+      var container = document.getElementById('lessonList');
+      var lessonDiv = document.createElement('div');
+      lessonDiv.className = 'lesson-item ' + type;
+      lessonDiv.id = lessonId;
+      lessonDiv.innerHTML = '<div class="lesson-header">' +
+        '<h4>Pelajaran ' + (order + 1) + '</h4>' +
+        '<div style="display: flex; align-items: center; gap: 10px;">' +
+        '<span class="lesson-type-badge ' + type + '">' + typeLabels[type] + '</span>' +
+        '<div class="lesson-actions">' +
+        '<button type="button" class="btn btn-small btn-secondary" onclick="toggleLesson(\'' + lessonId + '\')">Edit</button>' +
+        '<button type="button" class="btn btn-small btn-danger" onclick="removeLesson(\'' + lessonId + '\')">Hapus</button>' +
+        '</div></div></div>' +
+        '<div class="lesson-fields">' +
+        '<div class="form-row">' +
+        '<div class="form-group"><label>ID Pelajaran</label><input type="text" id="' + lessonId + '-id" placeholder="pelajaran-1"></div>' +
+        '<div class="form-group"><label>Order</label><input type="number" id="' + lessonId + '-order" value="' + order + '" min="0"></div>' +
+        '</div>' +
+        '<div class="form-group"><label>Judul</label><input type="text" id="' + lessonId + '-title" placeholder="Judul pelajaran"></div>' +
+        '<div class="form-group"><label>Format</label>' +
+        '<select id="' + lessonId + '-format">' +
+        (type === 'video' ? '<option value="youtube">YouTube</option>' : '') +
+        '<option value="pdf">PDF</option><option value="article">Artikel</option></select></div>' +
+        '<div class="form-group"><label>Content URL</label>' +
+        '<input type="text" id="' + lessonId + '-url" placeholder="' + (type === 'video' ? 'YouTube URL atau Video ID' : 'Link Google Drive') + '">' +
+        (type === 'video' ? '<div class="youtube-hint">Contoh: https://www.youtube.com/watch?v=VIDEO_ID atau langsung masukkan VIDEO_ID</div>' : '') +
+        '</div>' +
+        '<div class="form-group"><label>Completion Threshold (%)</label><input type="number" id="' + lessonId + '-threshold" value="80" min="0" max="100"></div>' +
+        (type === 'book' ? '<div class="form-group"><label>Description Text</label><textarea id="' + lessonId + '-description" rows="2" placeholder="Deskripsi konten buku"></textarea></div>' : '') +
+        (type === 'quiz' ? '<div class="form-group"><label>Pertanyaan</label><div id="' + lessonId + '-questions"></div><button type="button" class="btn btn-small btn-secondary" style="margin-top: 10px;" onclick="addQuestion(\'' + lessonId + '\')">+ Tambah Pertanyaan</button></div>' : '') +
+        '</div>';
+
+      container.appendChild(lessonDiv);
+      showToast('Pelajaran ditambahkan!');  
+    }
+
+    function toggleLesson(lessonId) {
+      var lesson = document.getElementById(lessonId);
+      lesson.classList.toggle('expanded');
+    }
+
+    function removeLesson(lessonId) {
+      var lesson = document.getElementById(lessonId);
+      if (lesson) {
+        lesson.remove();
+        for (var i = 0; i < lessons.length; i++) {
+          if (lessons[i].id === lessonId) {
+            lessons.splice(i, 1);
+            break;
+          }
+        }
+        showToast('Pelajaran dihapus!');
+      }
+    }
+
+    function addQuestion(lessonId) {
+      var questionsDiv = document.getElementById(lessonId + '-questions');
+      var questionCount = questionsDiv.children.length + 1;
+      var questionId = 'q-' + lessonId + '-' + questionCount;
+
+      var questionDiv = document.createElement('div');
+      questionDiv.className = 'question-item';
+      questionDiv.id = questionId;
+      questionDiv.innerHTML = '<label>Pertanyaan ' + questionCount + '</label>' +
+        '<input type="text" id="' + questionId + '-text" placeholder="Tulis pertanyaan" style="margin-bottom: 10px;">' +
+        '<div class="options-list">' +
+        '<div class="option-row"><input type="radio" name="' + questionId + '-correct" value="0" checked><input type="text" id="' + questionId + '-opt0" placeholder="Opsi A"></div>' +
+        '<div class="option-row"><input type="radio" name="' + questionId + '-correct" value="1"><input type="text" id="' + questionId + '-opt1" placeholder="Opsi B"></div>' +
+        '<div class="option-row"><input type="radio" name="' + questionId + '-correct" value="2"><input type="text" id="' + questionId + '-opt2" placeholder="Opsi C"></div>' +
+        '<div class="option-row"><input type="radio" name="' + questionId + '-correct" value="3"><input type="text" id="' + questionId + '-opt3" placeholder="Opsi D"></div>' +
+        '</div>' +
+        '<button type="button" class="btn btn-danger btn-small" style="margin-top: 10px;" onclick="this.parentElement.remove()">Hapus</button>';
+
+      questionsDiv.appendChild(questionDiv);
+    }
+
+    function downloadJSON() {
+      var id = document.getElementById('courseId').value.trim();
+      var title = document.getElementById('title').value.trim();
+      var subtitle = document.getElementById('subtitle').value.trim();
+      var imageUrl = document.getElementById('imageUrl').value.trim();
+      var difficulty = document.getElementById('difficulty').value;
+      var estimatedMinutes = parseInt(document.getElementById('estimatedMinutes').value) || 60;
+      var order = parseInt(document.getElementById('order').value) || 1;
+
+      if (!id || !title) {
+        showToast('ID dan Judul harus diisi!');
+        return;
+      }
+
+      var fileName = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '.json';
+
+      var courseLessons = [];
+      for (var i = 0; i < lessons.length; i++) {
+        var lesson = lessons[i];
+        var lessonId = document.getElementById(lesson.id + '-id').value.trim() || 'lesson-' + (i + 1);
+        var lessonOrder = parseInt(document.getElementById(lesson.id + '-order').value) || i;
+        var lessonTitle = document.getElementById(lesson.id + '-title').value.trim();
+        var format = document.getElementById(lesson.id + '-format').value;
+        var contentUrl = document.getElementById(lesson.id + '-url').value.trim();
+        var completionThreshold = parseInt(document.getElementById(lesson.id + '-threshold').value) || 80;
+
+        if (!lessonTitle) continue;
+
+        var lessonObj = {
+          id: lessonId,
+          courseId: id,
+          order: lessonOrder,
+          title: lessonTitle,
+          type: lesson.type,
+          format: format,
+          contentUrl: contentUrl,
+          completionThreshold: completionThreshold
+        };
+
+        if (lesson.type === 'book') {
+          var descText = document.getElementById(lesson.id + '-description').value.trim();
+          if (descText) lessonObj.descriptionText = descText;
+        }
+
+        if (lesson.type === 'quiz') {
+          var questionsDiv = document.getElementById(lesson.id + '-questions');
+          var questionItems = questionsDiv.querySelectorAll('.question-item');
+          var questions = [];
+
+          for (var q = 0; q < questionItems.length; q++) {
+            var qItem = questionItems[q];
+            var qId = 'q' + (q + 1);
+            var qText = document.getElementById(qItem.id + '-text').value.trim();
+            var correctRadio = document.querySelector('input[name="' + qItem.id + '-correct"]:checked');
+            var correctIndex = correctRadio ? parseInt(correctRadio.value) : 0;
+            var options = [];
+            for (var o = 0; o < 4; o++) {
+              var opt = document.getElementById(qItem.id + '-opt' + o).value.trim();
+              if (opt) options.push(opt);
+            }
+
+            if (qText && options.length > 0) {
+              questions.push({ id: qId, question: qText, options: options, correctIndex: correctIndex });
+            }
+          }
+
+          if (questions.length > 0) {
+            lessonObj.questions = questions;
+          }
+        }
+
+        courseLessons.push(lessonObj);
+      }
+
+      var kursus = {
+        id: id,
+        order: order,
+        title: title,
+        subtitle: subtitle || undefined,
+        imageUrl: imageUrl || undefined,
+        description: subtitle || undefined,
+        difficulty: difficulty,
+        estimatedMinutes: estimatedMinutes,
+        lessons: courseLessons
+      };
+
+      for (var key in kursus) {
+        if (kursus[key] === undefined) delete kursus[key];
+      }
+
+      var blob = new Blob([JSON.stringify(kursus, null, 2)], { type: 'application/json' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('JSON berhasil didownload!');
+    }
+
+    function clearForm() {
+      document.getElementById('courseId').value = generateCourseId();
+      document.getElementById('order').value = '1';
+      document.getElementById('title').value = '';
+      document.getElementById('subtitle').value = '';
+      document.getElementById('imageUrl').value = '';
+      document.getElementById('imagePreview').classList.remove('show');
+      document.getElementById('imagePreview').src = '';
+      document.getElementById('difficulty').selectedIndex = 1;
+      document.getElementById('estimatedMinutes').value = '60';
+
+      lessons = [];
+      document.getElementById('lessonList').innerHTML = '';
+      lessonCounter = 0;
+
+      showToast('Form berhasil dibersihkan!');
+    }
+
+    function showToast(message) {
+      var toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.style.display = 'block';
+      setTimeout(function() {
+        toast.style.display = 'none';
+      }, 3000);
+    }
+
+    window.onload = function() {
+      document.getElementById('courseId').value = generateCourseId();
+    };
+  </script>
+</body>
+</html>

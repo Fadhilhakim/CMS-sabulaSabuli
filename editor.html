@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SABULA SABULI - Content Editor</title>
+  <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
+  <style>
+    @font-face {
+      font-family: 'LontarakNeo';
+      src: url('font/LontarakNeo-Regular.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f5f5f5; color: #333; min-height: 100vh; }
+
+    .navbar {
+      background: linear-gradient(135deg, #1b5e20, #2e7d32);
+      padding: 10px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 3px solid #4caf50;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .nav-brand { display: flex; align-items: center; gap: 10px; }
+    .nav-logo { width: 40px; height: 40px; object-fit: cover; }
+    .nav-title { font-family: 'Cinzel', serif; font-size: 1.2rem; font-weight: 600; color: #fff; letter-spacing: 2px; }
+    .nav-subtitle { font-size: 0.7rem; color: #c8e6c9; letter-spacing: 1px; }
+    .nav-links { display: flex; gap: 8px; }
+    .nav-links a {
+      color: #e8f5e9;
+      text-decoration: none;
+      padding: 8px 15px;
+      border-radius: 8px;
+      transition: all 0.3s;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .nav-links a:hover { background: rgba(76, 175, 80, 0.3); }
+    .nav-links a.active { background: #4caf50; color: #fff; }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 5px;
+      margin-bottom: 20px;
+      background: #e8f5e9;
+      padding: 5px;
+      border-radius: 10px;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 12px 20px;
+      background: transparent;
+      border: none;
+      color: #666;
+      font-size: 1rem;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.3s;
+    }
+
+    .tab:hover { background: #c8e6c9; color: #333; }
+
+    .tab.active {
+      background: #4caf50;
+      color: #fff;
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .card {
+      background: #fff;
+      border-radius: 15px;
+      padding: 25px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      border: 1px solid #e0e0e0;
+    }
+
+    .card h2 {
+      color: #2e7d32;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #e0e0e0;
+      font-family: 'Cinzel', serif;
+    }
+
+    .form-group { margin-bottom: 15px; }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      color: #555;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%;
+      padding: 12px 15px;
+      background: #fff;
+      border: 1px solid #c8e6c9;
+      border-radius: 8px;
+      color: #333;
+      font-size: 1rem;
+      transition: border-color 0.3s;
+    }
+
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline: none;
+      border-color: #4caf50;
+      box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+    }
+
+    .form-group input[readonly], .form-group input:read-only {
+      background: #e8f5e9;
+      cursor: not-allowed;
+      color: #2e7d32;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+    }
+
+    .editor-container {
+      background: #fff;
+      border-radius: 8px;
+      min-height: 300px;
+    }
+
+    .file-upload {
+      border: 2px dashed #c8e6c9;
+      border-radius: 10px;
+      padding: 30px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .file-upload:hover { border-color: #4caf50; }
+
+    .file-upload input { display: none; }
+
+    .file-upload .icon { font-size: 3rem; color: #4caf50; }
+
+    .file-upload .text { color: #888; margin-top: 10px; }
+
+    .preview-image {
+      max-width: 200px;
+      max-height: 200px;
+      border-radius: 8px;
+      margin-top: 10px;
+      object-fit: cover;
+    }
+
+    .lesson-item {
+      background: #e8f5e9;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 15px;
+      border-left: 4px solid #4caf50;
+    }
+
+    .lesson-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .lesson-header h4 { color: #2e7d32; }
+
+    .lesson-actions { display: flex; gap: 10px; }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.3s;
+      font-family: 'Cinzel', serif;
+    }
+
+    .btn-primary { background: #4caf50; color: #fff; }
+    .btn-primary:hover { background: #388e3c; }
+
+    .btn-secondary { background: #e8f5e9; color: #2e7d32; }
+    .btn-secondary:hover { background: #c8e6c9; }
+
+    .btn-danger { background: #e53935; color: #fff; }
+    .btn-danger:hover { background: #c62828; }
+
+    .btn-small { padding: 6px 12px; font-size: 0.8rem; }
+
+    .output-section {
+      background: #e8f5e9;
+      border-radius: 10px;
+      padding: 20px;
+      margin-top: 20px;
+    }
+
+    .output-section h3 { color: #2e7d32; margin-bottom: 15px; }
+
+    .json-output {
+      background: #fff;
+      padding: 15px;
+      border-radius: 8px;
+      max-height: 400px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 0.85rem;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      border: 1px solid #c8e6c9;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+      flex-wrap: wrap;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #4caf50;
+      color: #fff;
+      padding: 15px 25px;
+      border-radius: 8px;
+      display: none;
+      animation: slideIn 0.3s;
+      z-index: 1000;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    .question-item {
+      background: #f5f5f5;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 10px;
+      border: 1px solid #c8e6c9;
+    }
+
+    .question-item input { margin-bottom: 10px; }
+
+    .options-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .option-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .option-row input[type="radio"] { width: auto; accent-color: #4caf50; }
+
+    .option-row input[type="text"] { flex: 1; }
+
+    .correct-badge {
+      background: #4caf50;
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+    }
+
+    .hidden { display: none; }
+
+    .ql-toolbar { background: #f5f5f5; font-family: 'Segoe UI', sans-serif; }
+    .ql-container { font-size: 1rem; }
+    .ql-editor { font-family: Arial, sans-serif; }
+    .ql-editor font[size="7"] { font-family: 'LontarakNeo', Arial, sans-serif; }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-brand">
+      <img src="logo.png" alt="Logo" class="nav-logo">
+      <div>
+        <div class="nav-title">Sabula-Sabuli</div>
+        <div class="nav-subtitle">Admin Panel</div>
+      </div>
+    </div>
+    <div class="nav-links">
+      <a href="index.html">Beranda</a>
+      <a href="articles.html">📰 Artikel</a>
+      <a href="book.html">📚 Buku</a>
+      <a href="course.html">🎓 Kursus</a>
+      <a href="editor.html" class="active">✏️ Editor</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="tabs">
+      <button class="tab active" data-tab="artikel">Artikel</button>
+      <button class="tab" data-tab="buku">Buku</button>
+      <button class="tab" data-tab="kursus">Kursus</button>
+    </div>
+
+    <!-- ARTIKEL FORM -->
+    <div id="artikel" class="tab-content active">
+      <div class="card">
+        <h2>Form Artikel Baru</h2>
+        <form id="artikelForm">
+          <div class="form-row">
+            <div class="form-group">
+              <label>ID Artikel</label>
+              <input type="text" id="artikelId" placeholder="artikel-1" required>
+            </div>
+            <div class="form-group">
+              <label>Kategori</label>
+              <select id="artikelKategori">
+                <option value="Budaya">Budaya</option>
+                <option value="Sejarah">Sejarah</option>
+                <option value="Tradisi">Tradisi</option>
+                <option value="Kesenian">Kesenian</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Judul</label>
+            <input type="text" id="artikelJudul" placeholder="Judul Artikel" required>
+          </div>
+
+          <div class="form-group">
+            <label>Ringkasan</label>
+            <textarea id="artikelRingkasan" rows="2" placeholder="Ringkasan singkat artikel"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>URL Gambar</label>
+            <input type="url" id="artikelGambar" placeholder="https://example.com/image.jpg">
+          </div>
+
+          <div class="form-group">
+            <label>Isi Artikel (Rich Text)</label>
+            <div class="editor-container">
+              <div id="artikelEditor"></div>
+            </div>
+          </div>
+
+          <button type="button" class="btn btn-primary" onclick="generateArtikel()">Generate JSON</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- BUKU FORM -->
+    <div id="buku" class="tab-content">
+      <div class="card">
+        <h2>Form Buku Baru</h2>
+        <form id="bukuForm">
+          <div class="form-row">
+            <div class="form-group">
+              <label>ID Buku</label>
+              <input type="text" id="bukuId" placeholder="buku-saya" required>
+            </div>
+            <div class="form-group">
+              <label>Tahun Terbit</label>
+              <input type="number" id="bukuTahun" placeholder="2024" min="1900" max="2100">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Judul</label>
+            <input type="text" id="bukuJudul" placeholder="Judul Buku" required>
+          </div>
+
+          <div class="form-group">
+            <label>Subjudul</label>
+            <input type="text" id="bukuSubjudul" placeholder="Subjudul atau tagline">
+          </div>
+
+          <div class="form-group">
+            <label>Penulis/Author</label>
+            <input type="text" id="bukuAuthor" placeholder="Nama Penulis">
+          </div>
+
+          <div class="form-group">
+            <label>Deskripsi</label>
+            <textarea id="bukuDeskripsi" rows="2" placeholder="Deskripsi singkat buku"></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Cover Buku</label>
+              <div class="file-upload" onclick="document.getElementById('bukuCover').click()">
+                <input type="file" id="bukuCover" accept="image/*" onchange="previewCover(this)">
+                <div class="icon">&#128196;</div>
+                <div class="text">Klik untuk upload cover</div>
+                <img id="coverPreview" class="preview-image hidden">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>File PDF</label>
+              <div class="file-upload" onclick="document.getElementById('bukuPdf').click()">
+                <input type="file" id="bukuPdf" accept="application/pdf" onchange="previewPdf(this)">
+                <div class="icon">&#128196;</div>
+                <div class="text" id="pdfFileName">Klik untuk upload PDF</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Path Cover (hasil generate)</label>
+            <input type="text" id="bukuCoverPath" placeholder="assets/Buku/.../cover.jpg" readonly>
+          </div>
+
+          <div class="form-group">
+            <label>Path PDF (hasil generate)</label>
+            <input type="text" id="bukuPdfPath" placeholder="assets/Buku/.../file.pdf" readonly>
+          </div>
+
+          <button type="button" class="btn btn-primary" onclick="generateBuku()">Generate JSON</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- KURSUS FORM -->
+    <div id="kursus" class="tab-content">
+      <div class="card">
+        <h2>Form Kursus Baru</h2>
+        <form id="kursusForm">
+          <div class="form-row">
+            <div class="form-group">
+              <label>ID Kursus</label>
+              <input type="text" id="kursusId" placeholder="kursus-saya" required>
+            </div>
+            <div class="form-group">
+              <label>Order</label>
+              <input type="number" id="kursusOrder" placeholder="1" min="1">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Judul</label>
+            <input type="text" id="kursusJudul" placeholder="Judul Kursus" required>
+          </div>
+
+          <div class="form-group">
+            <label>Subjudul</label>
+            <input type="text" id="kursusSubjudul" placeholder="Deskripsi singkat kursus">
+          </div>
+
+          <div class="form-group">
+            <label>URL Gambar</label>
+            <input type="url" id="kursusGambar" placeholder="https://example.com/image.jpg">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Tingkat Kesulitan</label>
+              <select id="kursusDifficulty">
+                <option value="easy">Mudah</option>
+                <option value="medium" selected>Sedang</option>
+                <option value="hard">Sulit</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Estimasi Waktu (menit)</label>
+              <input type="number" id="kursusWaktu" placeholder="60" min="1">
+            </div>
+          </div>
+
+          <div class="card" style="background: #e8f5e9; margin-top: 20px;">
+            <h3 style="color: #2e7d32; margin-bottom: 15px;">Pelajaran</h3>
+            <div id="lessonsContainer"></div>
+            <button type="button" class="btn btn-secondary" onclick="addLesson()">+ Tambah Pelajaran</button>
+          </div>
+
+          <button type="button" class="btn btn-primary" style="margin-top: 20px;" onclick="generateKursus()">Generate JSON</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- OUTPUT SECTION -->
+    <div class="output-section" id="outputSection">
+      <h3>Output JSON</h3>
+      <div class="json-output" id="jsonOutput">// JSON akan muncul di sini...</div>
+      <div class="action-buttons">
+        <button class="btn btn-primary" onclick="copyJson()">&#128203; Salin</button>
+        <button class="btn btn-secondary" onclick="downloadJson()">&#128229; Download</button>
+        <button class="btn btn-secondary" onclick="appendToFile()">&#128190; Append ke File</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Berhasil!</div>
+
+  <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
+  <script>
+    // Initialize Quill editors
+    const Font = Quill.import('formats/font');
+    Font.whitelist = ['LontarakNeo', 'arial', 'times new roman'];
+    Quill.register(Font, true);
+
+    const artikelQuill = new Quill('#artikelEditor', {
+      theme: 'snow',
+      placeholder: 'Tulis isi artikel di sini...',
+      modules: {
+        toolbar: [
+          ['bold', 'italic', 'underline', 'strike'],
+          [{ 'header': [1, 2, 3, false] }],
+          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+          [{ 'align': [] }],
+          ['link', 'image'],
+          ['clean']
+        ]
+      }
+    });
+
+    // Add Lontarak button to toolbar after initialization
+    const originalToolbar = document.querySelector('.ql-toolbar');
+    if (originalToolbar) {
+      const btnGroup = document.createElement('span');
+      btnGroup.className = 'ql-formats';
+      const lontarakBtn = document.createElement('button');
+      lontarakBtn.className = 'ql-lontarak';
+      lontarakBtn.innerHTML = '<span style="font-family: \'LontarakNeo\', Arial;">Aa</span>';
+      lontarakBtn.title = 'Lontarak';
+      lontarakBtn.style.cssText = 'padding: 4px 8px;';
+
+      // State untuk melacak apakah Lontarak aktif
+      let isLontarakActive = false;
+
+      lontarakBtn.onclick = function(e) {
+        e.preventDefault();
+        const selection = artikelQuill.getSelection();
+
+        if (selection && selection.length > 0) {
+          // Jika ada teks diseleksi, toggle font untuk teks tersebut saja
+          const currentFormat = artikelQuill.getFormat(selection.index, selection.length);
+          if (currentFormat.font === 'LontarakNeo') {
+            // Ubah teks yang diseleksi ke Arial
+            artikelQuill.formatText(selection.index, selection.length, { font: 'arial' });
+          } else {
+            // Ubah teks yang diseleksi ke LontarakNeo
+            artikelQuill.formatText(selection.index, selection.length, { font: 'LontarakNeo' });
+          }
+        }
+
+        // Toggle button state
+        isLontarakActive = !isLontarakActive;
+        if (isLontarakActive) {
+          lontarakBtn.style.background = '#c8e6c9';
+          lontarakBtn.style.boxShadow = 'inset 0 1px 2px rgba(0,0,0,0.1)';
+          // Aktifkan mode Lontarak untuk teks baru
+          artikelQuill.format('font', 'LontarakNeo');
+        } else {
+          lontarakBtn.style.background = '';
+          lontarakBtn.style.boxShadow = '';
+          // Matikan mode Lontarak untuk teks baru
+          artikelQuill.format('font', 'arial');
+        }
+      };
+      btnGroup.appendChild(lontarakBtn);
+      originalToolbar.appendChild(btnGroup);
+    }
+
+    // Tab Navigation
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.tab).classList.add('active');
+      });
+    });
+
+    // Lessons Management
+    let lessonCounter = 0;
+    const lessons = [];
+
+    function addLesson() {
+      const lessonId = `lesson-${Date.now()}`;
+      const container = document.getElementById('lessonsContainer');
+
+      const lessonDiv = document.createElement('div');
+      lessonDiv.className = 'lesson-item';
+      lessonDiv.id = lessonId;
+      lessonDiv.innerHTML = `
+        <div class="lesson-header">
+          <h4>Pelajaran Baru</h4>
+          <div class="lesson-actions">
+            <button type="button" class="btn btn-danger btn-small" onclick="removeLesson('${lessonId}')">Hapus</button>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>ID Pelajaran</label>
+            <input type="text" id="${lessonId}-lessonid" placeholder="pelajaran-1">
+          </div>
+          <div class="form-group">
+            <label>Order</label>
+            <input type="number" id="${lessonId}-order" placeholder="0" min="0">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Judul</label>
+          <input type="text" id="${lessonId}-title" placeholder="Judul pelajaran">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Tipe</label>
+            <select id="${lessonId}-type" onchange="toggleQuizOptions('${lessonId}')">
+              <option value="video">Video</option>
+              <option value="book">Buku</option>
+              <option value="quiz">Kuis</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Format</label>
+            <select id="${lessonId}-format">
+              <option value="youtube">YouTube</option>
+              <option value="pdf">PDF</option>
+              <option value="article">Artikel</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Content URL</label>
+          <input type="text" id="${lessonId}-url" placeholder="URL atau ID video">
+        </div>
+        <div class="form-group">
+          <label>Deskripsi (untuk buku)</label>
+          <textarea id="${lessonId}-desc" rows="2" placeholder="Deskripsi konten"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Completion Threshold (%)</label>
+          <input type="number" id="${lessonId}-threshold" value="80" min="0" max="100">
+        </div>
+        <div class="quiz-options hidden" id="${lessonId}-quizopts">
+          <h5 style="color: #2e7d32; margin: 10px 0;">Pertanyaan Kuis</h5>
+          <div id="${lessonId}-questions"></div>
+          <button type="button" class="btn btn-secondary btn-small" onclick="addQuestion('${lessonId}')">+ Tambah Pertanyaan</button>
+        </div>
+      `;
+
+      container.appendChild(lessonDiv);
+      lessons.push(lessonId);
+      lessonCounter++;
+    }
+
+    function removeLesson(lessonId) {
+      const lessonDiv = document.getElementById(lessonId);
+      if (lessonDiv) {
+        lessonDiv.remove();
+        const index = lessons.indexOf(lessonId);
+        if (index > -1) lessons.splice(index, 1);
+      }
+    }
+
+    function toggleQuizOptions(lessonId) {
+      const type = document.getElementById(`${lessonId}-type`).value;
+      const quizOpts = document.getElementById(`${lessonId}-quizopts`);
+      if (type === 'quiz') {
+        quizOpts.classList.remove('hidden');
+      } else {
+        quizOpts.classList.add('hidden');
+      }
+    }
+
+    function addQuestion(lessonId) {
+      const questionsDiv = document.getElementById(`${lessonId}-questions`);
+      const questionId = `q-${Date.now()}`;
+      const questionCount = questionsDiv.children.length + 1;
+
+      const questionDiv = document.createElement('div');
+      questionDiv.className = 'question-item';
+      questionDiv.id = questionId;
+      questionDiv.innerHTML = `
+        <label>Pertanyaan ${questionCount}</label>
+        <input type="text" id="${questionId}-text" placeholder="Tulis pertanyaan">
+        <div class="options-list">
+          ${[0,1,2,3].map(i => `
+            <div class="option-row">
+              <input type="radio" name="${questionId}-correct" value="${i}" ${i === 0 ? 'checked' : ''}>
+              <input type="text" id="${questionId}-opt${i}" placeholder="Opsi ${String.fromCharCode(65 + i)}">
+            </div>
+          `).join('')}
+        </div>
+        <button type="button" class="btn btn-danger btn-small" style="margin-top: 10px;" onclick="this.parentElement.remove()">Hapus</button>
+      `;
+
+      questionsDiv.appendChild(questionDiv);
+    }
+
+    // Cover Preview
+    function previewCover(input) {
+      const preview = document.getElementById('coverPreview');
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          preview.src = e.target.result;
+          preview.classList.remove('hidden');
+          // Generate path
+          const fileName = input.files[0].name;
+          document.getElementById('bukuCoverPath').value = `assets/Buku/${document.getElementById('bukuId').value || 'new'}/${fileName}`;
+        };
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+
+    // PDF Preview
+    function previewPdf(input) {
+      if (input.files && input.files[0]) {
+        const fileName = input.files[0].name;
+        document.getElementById('pdfFileName').textContent = fileName;
+        document.getElementById('bukuPdfPath').value = `assets/Buku/${document.getElementById('bukuId').value || 'new'}/${fileName}`;
+      }
+    }
+
+    // Generate Functions
+    function generateArtikel() {
+      const id = document.getElementById('artikelId').value.trim();
+      const title = document.getElementById('artikelJudul').value.trim();
+      const summary = document.getElementById('artikelRingkasan').value.trim();
+      const imageUrl = document.getElementById('artikelGambar').value.trim();
+      const category = document.getElementById('artikelKategori').value;
+      const content = artikelQuill.root.innerHTML;
+
+      if (!id || !title) {
+        showToast('ID dan Judul harus diisi!');
+        return;
+      }
+
+      const artikel = {
+        id,
+        title,
+        summary,
+        imageUrl,
+        category,
+        content: artikelQuill.getText().trim(),
+        publishedAt: new Date().toISOString()
+      };
+
+      document.getElementById('jsonOutput').textContent = JSON.stringify(artikel, null, 2);
+      showToast('JSON Artikel berhasil digenerate!');
+    }
+
+    function generateBuku() {
+      const id = document.getElementById('bukuId').value.trim();
+      const title = document.getElementById('bukuJudul').value.trim();
+      const subtitle = document.getElementById('bukuSubjudul').value.trim();
+      const author = document.getElementById('bukuAuthor').value.trim();
+      const description = document.getElementById('bukuDeskripsi').value.trim();
+      const year = parseInt(document.getElementById('bukuTahun').value) || new Date().getFullYear();
+      const coverPath = document.getElementById('bukuCoverPath').value.trim();
+      const pdfPath = document.getElementById('bukuPdfPath').value.trim();
+
+      if (!id || !title) {
+        showToast('ID dan Judul harus diisi!');
+        return;
+      }
+
+      const buku = {
+        id,
+        title,
+        subtitle,
+        coverPath: coverPath || undefined,
+        pdfPath: pdfPath || undefined,
+        description,
+        author,
+        year
+      };
+
+      // Remove undefined fields
+      Object.keys(buku).forEach(key => buku[key] === undefined && delete buku[key]);
+
+      document.getElementById('jsonOutput').textContent = JSON.stringify(buku, null, 2);
+      showToast('JSON Buku berhasil digenerate!');
+    }
+
+    function generateKursus() {
+      const id = document.getElementById('kursusId').value.trim();
+      const title = document.getElementById('kursusJudul').value.trim();
+      const subtitle = document.getElementById('kursusSubjudul').value.trim();
+      const imageUrl = document.getElementById('kursusGambar').value.trim();
+      const difficulty = document.getElementById('kursusDifficulty').value;
+      const estimatedMinutes = parseInt(document.getElementById('kursusWaktu').value) || 60;
+      const order = parseInt(document.getElementById('kursusOrder').value) || 1;
+
+      if (!id || !title) {
+        showToast('ID dan Judul harus diisi!');
+        return;
+      }
+
+      const courseLessons = [];
+      lessons.forEach(lessonId => {
+        const lessonid = document.getElementById(`${lessonId}-lessonid`).value.trim() || `lesson-${courseLessons.length + 1}`;
+        const lessonOrder = parseInt(document.getElementById(`${lessonId}-order`).value) || courseLessons.length;
+        const lessonTitle = document.getElementById(`${lessonId}-title`).value.trim();
+        const type = document.getElementById(`${lessonId}-type`).value;
+        const format = document.getElementById(`${lessonId}-format`).value;
+        const contentUrl = document.getElementById(`${lessonId}-url`).value.trim();
+        const descriptionText = document.getElementById(`${lessonId}-desc`).value.trim();
+        const completionThreshold = parseInt(document.getElementById(`${lessonId}-threshold`).value) || 80;
+
+        if (!lessonTitle) return;
+
+        const lesson = {
+          id: lessonid,
+          courseId: id,
+          order: lessonOrder,
+          title: lessonTitle,
+          type,
+          format,
+          contentUrl,
+          completionThreshold,
+          descriptionText: descriptionText || undefined
+        };
+
+        // Remove undefined fields
+        Object.keys(lesson).forEach(key => lesson[key] === undefined && delete lesson[key]);
+
+        // Handle quiz questions
+        if (type === 'quiz') {
+          const questionsDiv = document.getElementById(`${lessonId}-questions`);
+          const questionItems = questionsDiv.querySelectorAll('.question-item');
+          const questions = [];
+
+          questionItems.forEach((q, idx) => {
+            const qId = `q${idx + 1}`;
+            const qText = document.getElementById(`${q.id}-text`).value.trim();
+            const correctRadio = document.querySelector(`input[name="${q.id}-correct"]:checked`);
+            const correctIndex = correctRadio ? parseInt(correctRadio.value) : 0;
+            const options = [0,1,2,3].map(i => document.getElementById(`${q.id}-opt${i}`).value.trim()).filter(o => o);
+
+            if (qText && options.length > 0) {
+              questions.push({
+                id: qId,
+                question: qText,
+                options,
+                correctIndex
+              });
+            }
+          });
+
+          if (questions.length > 0) {
+            lesson.questions = questions;
+          }
+        }
+
+        courseLessons.push(lesson);
+      });
+
+      const kursus = {
+        id,
+        order,
+        title,
+        subtitle,
+        imageUrl: imageUrl || undefined,
+        description: subtitle,
+        difficulty,
+        estimatedMinutes,
+        lessons: courseLessons
+      };
+
+      // Remove undefined fields
+      Object.keys(kursus).forEach(key => kursus[key] === undefined && delete kursus[key]);
+
+      document.getElementById('jsonOutput').textContent = JSON.stringify(kursus, null, 2);
+      showToast('JSON Kursus berhasil digenerate!');
+    }
+
+    // Copy JSON
+    function copyJson() {
+      const json = document.getElementById('jsonOutput').textContent;
+      if (json && !json.includes('JSON akan')) {
+        navigator.clipboard.writeText(json).then(() => {
+          showToast('JSON berhasil disalin!');
+        });
+      } else {
+        showToast('Generate JSON terlebih dahulu!');
+      }
+    }
+
+    // Download JSON
+    function downloadJson() {
+      const json = document.getElementById('jsonOutput').textContent;
+      if (json && !json.includes('JSON akan')) {
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+
+        // Determine filename based on active tab
+        const activeTab = document.querySelector('.tab.active').dataset.tab;
+        const id = activeTab === 'artikel' ? document.getElementById('artikelId').value :
+                   activeTab === 'buku' ? document.getElementById('bukuId').value :
+                   document.getElementById('kursusId').value;
+
+        a.download = `${id || 'data'}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('JSON berhasil didownload!');
+      } else {
+        showToast('Generate JSON terlebih dahulu!');
+      }
+    }
+
+    // Append to existing JSON file
+    async function appendToFile() {
+      const json = document.getElementById('jsonOutput').textContent;
+      if (json && !json.includes('JSON akan')) {
+        const activeTab = document.querySelector('.tab.active').dataset.tab;
+        const fileName = activeTab === 'artikel' ? 'articles.json' :
+                        activeTab === 'buku' ? 'books.json' : 'course.json';
+
+        try {
+          // Read existing file
+          const response = await fetch(fileName);
+          let existingData = [];
+
+          if (response.ok) {
+            const text = await response.text();
+            if (text.trim()) {
+              existingData = JSON.parse(text);
+              if (!Array.isArray(existingData)) existingData = [existingData];
+            }
+          }
+
+          // Parse and append new data
+          const newData = JSON.parse(json);
+
+          // Check if item with same ID exists
+          const existingIndex = existingData.findIndex(item => item.id === newData.id);
+          if (existingIndex > -1) {
+            existingData[existingIndex] = newData;
+          } else {
+            existingData.push(newData);
+          }
+
+          // Save back
+          const updatedJson = JSON.stringify(existingData, null, 2);
+          const blob = new Blob([updatedJson], { type: 'application/json' });
+
+          // Create download link for user to save
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = fileName;
+          a.click();
+          URL.revokeObjectURL(url);
+
+          showToast(`${fileName} siap di-download!`);
+        } catch (e) {
+          showToast('Gagal mengakses file. Download manual.');
+        }
+      } else {
+        showToast('Generate JSON terlebih dahulu!');
+      }
+    }
+
+    // Toast notification
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.style.display = 'block';
+      setTimeout(() => {
+        toast.style.display = 'none';
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
